@@ -1,0 +1,61 @@
+# name: Setup Branch Protection
+
+# # Run this ONCE manually from Actions → "Setup Branch Protection" → "Run workflow".
+# # It configures main to block merges until all required checks pass.
+# # Requires the GITHUB_TOKEN to have admin rights on the repo.
+# # If it fails with 403, go to Settings → Branches → Add rule and set the
+# # required status checks listed in the "contexts" array below.
+
+# on:
+#   workflow_dispatch:
+
+# permissions:
+#   contents: read
+#   administration: write
+
+# jobs:
+#   configure:
+#     name: Configure Branch Protection on main
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Apply required status checks
+#         env:
+#           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#           REPO: ${{ github.repository }}
+#         run: |
+#           gh api \
+#             --method PUT \
+#             -H "Accept: application/vnd.github+json" \
+#             "repos/$REPO/branches/main/protection" \
+#             --input - << 'JSON'
+#           {
+#             "required_status_checks": {
+#               "strict": true,
+#               "contexts": [
+#                 "Verify Commit Signatures",
+#                 "Build & Test",
+#                 "Obfuscated Script Detection",
+#                 "CodeQL Security Scan (javascript)"
+#               ]
+#             },
+#             "enforce_admins": true,
+#             "required_pull_request_reviews": {
+#               "dismiss_stale_reviews": true,
+#               "require_code_owner_reviews": false,
+#               "required_approving_review_count": 1
+#             },
+#             "restrictions": null
+#           }
+#           JSON
+
+#           echo "✅ Branch protection applied to main."
+#           echo ""
+#           echo "Required checks before merge:"
+#           echo "  • Verify Commit Signatures"
+#           echo "  • Build & Test"
+#           echo "  • Obfuscated Script Detection"
+#           echo "  • CodeQL Security Scan (javascript)"
+#           echo ""
+#           echo "enforce_admins=true — admins are also blocked from bypassing."
+#           echo "required_approving_review_count=1 — at least one approval required."

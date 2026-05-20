@@ -69,7 +69,7 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>Todo Apppppp</h1>
-        <p className="subtitle">Full stack demo</p>
+        <p className="subtitle">Full-stack demo</p>
       </header>
 
       <main className="app-main">

@@ -68,8 +68,8 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Todo Apppppp</h1>
-        <p className="subtitle">Full stack demo</p>
+        <h1>Todo App</h1>
+        <p className="subtitle">Full-stack demo</p>
       </header>
 
       <main className="app-main">

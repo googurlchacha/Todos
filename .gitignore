@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Env and secrets
+.env
+.env.local
+.env.*.local
+kubernetes/secret.yaml
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs and coverage
+logs/
+*.log
+npm-debug.log*
+coverage/
+.nyc_output/
+
+# Testing
+.jest/
+
+# Docker
+.docker/
+
+# GCP
+*.json
+!package.json
+!package-lock.json
+!tsconfig*.json
+!nest-cli.json
+
+# Misc
+*.pid
+*.seed
+.cache

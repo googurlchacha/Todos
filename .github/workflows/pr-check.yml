@@ -1,0 +1,105 @@
+name: PR Gate — Verified Commit + Security Scan
+
+on:
+  pull_request:
+    branches:
+      - main
+      - prod
+
+permissions:
+  contents: read
+  security-events: write   # required for CodeQL to upload results
+  pull-requests: write     # required to post comments on PR
+
+jobs:
+  # ─────────────────────────────────────────────
+  # JOB 1: Check that every commit in the PR is verified (GPG/SSH signed)
+  # ─────────────────────────────────────────────
+  verify-commits:
+    name: Verify Commit Signatures
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # fetch full history so we can inspect all commits in the PR
+
+      - name: Check all commits are verified
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          echo "Fetching commits for PR #$PR_NUMBER..."
+
+          # Get all commits in this PR via GitHub API
+          COMMITS=$(gh api repos/$REPO/pulls/$PR_NUMBER/commits --paginate --jq '.[].sha')
+
+          UNVERIFIED=()
+
+          for SHA in $COMMITS; do
+            VERIFIED=$(gh api repos/$REPO/commits/$SHA --jq '.commit.verification.verified')
+            echo "Commit $SHA — verified: $VERIFIED"
+
+            if [ "$VERIFIED" != "true" ]; then
+              UNVERIFIED+=($SHA)
+            fi
+          done
+
+          if [ ${#UNVERIFIED[@]} -ne 0 ]; then
+            echo ""
+            echo "❌ The following commits are NOT verified (unsigned):"
+            for SHA in "${UNVERIFIED[@]}"; do
+              echo "  - $SHA"
+            done
+            echo ""
+            echo "All commits must be signed with a verified GPG or SSH key."
+            echo "See: https://docs.github.com/en/authentication/managing-commit-signature-verification"
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ All commits are verified."
+
+  # ─────────────────────────────────────────────
+  # JOB 2: CodeQL Security Scan
+  # Runs only if commit verification passes
+  # ─────────────────────────────────────────────
+  security-scan:
+    name: CodeQL Security Scan
+    runs-on: ubuntu-latest
+    needs: verify-commits   # only run if commits are verified
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Add or remove languages based on your repo
+        # Supported: c-cpp, csharp, go, java-kotlin, javascript-typescript, python, ruby, swift
+        language:
+          - javascript  # remove/change if not applicable
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # Optional: use a custom query suite for stricter scanning
+          # queries: security-extended
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+        # CodeQL tries to auto-detect and build your project.
+        # If autobuild fails for compiled languages, replace this step with
+        # your actual build commands, e.g.:
+        #   run: |
+        #     make bootstrap
+        #     make release
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"

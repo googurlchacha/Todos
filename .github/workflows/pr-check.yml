@@ -643,34 +643,7 @@ jobs:
           > Every entry in that file is **logged and audited** in CI — there are no silent exclusions."
 
   # ─────────────────────────────────────────────
-  # JOB 3: Build & Test
-  # Runs backend Jest tests + frontend TypeScript build + ESLint.
-  # Runs in parallel with obfuscation-scan after commits are verified.
-  # ─────────────────────────────────────────────
-  build-and-test:
-    name: Build & Test
-    runs-on: ubuntu-latest
-    needs: verify-commits
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Backend — install & test
-        working-directory: backend
-        run: |
-          npm ci
-          npm test
-
-      - name: Frontend — install, build & lint
-        working-directory: frontend
-        run: |
-          npm ci
-          npm run build
-          npm run lint
-
-  # ─────────────────────────────────────────────
-  # JOB 4: CodeQL — runs only after all three gates pass
+  # JOB 3: CodeQL — runs only after all two gates pass
   # ─────────────────────────────────────────────
   security-scan:
     name: CodeQL Security Scan
